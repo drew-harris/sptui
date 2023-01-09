@@ -14,12 +14,14 @@ use std::{
 };
 use tui::{
     backend::CrosstermBackend,
+    layout::Rect,
     widgets::{Block, Borders},
     Terminal,
 };
 
 enum Event<I> {
     Input(I),
+    Resize(u16, u16),
     Tick,
 }
 
@@ -37,8 +39,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .unwrap_or_else(|| Duration::from_secs(0));
 
             if event::poll(timeout).expect("poll works") {
-                if let CEvent::Key(key) = event::read().expect("can read events") {
-                    tx.send(Event::Input(key)).expect("can send events");
+                let event = event::read().expect("Can read events");
+                match event {
+                    CEvent::Key(key) => tx.send(Event::Input(key)).unwrap_or(()),
+
+                    CEvent::Resize(x, y) => tx.send(Event::Resize(x, y)).unwrap_or(()),
+
+                    _ => {}
                 }
             }
 
@@ -60,7 +67,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     loop {
         terminal.draw(|f| {
             let size = f.size();
-
             let block = Block::default().title("Test Block").borders(Borders::ALL);
             f.render_widget(block, size);
         })?;
@@ -72,10 +78,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     break;
                 }
 
+                event::KeyCode::Char('q') => {
+                    break;
+                }
+
                 _ => {}
             },
 
             Event::Tick => {}
+
+            Event::Resize(x, y) => terminal.resize(Rect::new(0, 0, x, y))?,
         };
     }
 
