@@ -3,29 +3,31 @@ mod events;
 mod ui;
 
 use app::App;
+use events::{watch_keys, Event};
+use ui::draw_ui;
+
+use std::{io, sync::mpsc};
+
+use anyhow::{Context, Result};
 use crossterm::{
     event::{self, DisableMouseCapture, EnableMouseCapture},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
-
-use events::{watch_keys, Event};
-use ui::draw_ui;
-
-use std::{io, sync::mpsc};
 use tui::{backend::CrosstermBackend, layout::Rect, Terminal};
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() -> Result<()> {
     enable_raw_mode()?;
 
     let (tx, rx) = mpsc::channel();
     watch_keys(tx);
 
     let mut stdout = io::stdout();
-    execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
+    execute!(stdout, EnterAlternateScreen, EnableMouseCapture)
+        .context("Failed to execute crossterm features")?;
 
     let backend = CrosstermBackend::new(stdout);
-    let mut terminal = Terminal::new(backend)?;
+    let mut terminal = Terminal::new(backend).context("Failed to create terminal")?;
 
     let mut app = App::new();
 
