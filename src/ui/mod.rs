@@ -1,7 +1,7 @@
 use tui::{
     backend::Backend,
     layout::Margin,
-    widgets::{Block, Borders, Paragraph},
+    widgets::{Block, BorderType, Borders, Paragraph},
     Frame,
 };
 
@@ -15,7 +15,10 @@ pub fn draw_ui<B: Backend>(f: &mut Frame<B>, app: &App) {
         false => "Not Clicked".to_string(),
     };
 
-    let block = Block::default().title(title).borders(Borders::ALL);
+    let block = Block::default()
+        .title(title)
+        .borders(Borders::ALL)
+        .border_type(BorderType::Rounded);
     let hint = Paragraph::new("Press \"J\" to toggle");
     f.render_widget(
         hint,
