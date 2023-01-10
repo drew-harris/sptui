@@ -9,3 +9,4 @@ edition = "2021"
 tui = "0.19"
 crossterm = "0.25"
 anyhow = "1.0.68"
+tokio = {version = "1.24.1", features = ["full"]}
