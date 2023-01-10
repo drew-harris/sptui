@@ -1,6 +1,8 @@
+mod app;
 mod events;
 mod ui;
 
+use app::App;
 use crossterm::{
     event::{self, DisableMouseCapture, EnableMouseCapture},
     execute,
@@ -25,8 +27,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
+    let mut app = App::new();
+
     loop {
-        terminal.draw(|f| draw_ui(f))?;
+        terminal.draw(|f| draw_ui(f, &mut app))?;
 
         // Check channel
         match rx.recv()? {
@@ -37,6 +41,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 event::KeyCode::Char('q') => {
                     break;
                 }
+                event::KeyCode::Char('j') => app.toggle(),
                 _ => {}
             },
 

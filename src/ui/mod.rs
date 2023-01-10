@@ -4,8 +4,15 @@ use tui::{
     Frame,
 };
 
-pub fn draw_ui<B: Backend>(f: &mut Frame<B>) {
+use crate::app::App;
+
+pub fn draw_ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
     let size = f.size();
-    let block = Block::default().title("Test Block").borders(Borders::ALL);
+    let title = match app.is_clicked {
+        true => "Clicked".to_string(),
+        false => "Not Clicked".to_string(),
+    };
+
+    let block = Block::default().title(title).borders(Borders::ALL);
     f.render_widget(block, size);
 }
