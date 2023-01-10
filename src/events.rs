@@ -1,6 +1,6 @@
 use std::{
-    sync::mpsc::Sender,
-    thread,
+    sync::mpsc::{Receiver, Sender},
+    thread::{self, JoinHandle},
     time::{Duration, Instant},
 };
 
@@ -13,11 +13,18 @@ pub enum Event<I> {
     Tick,
 }
 
-pub fn watch_keys(tx: Sender<Event<KeyEvent>>) {
+pub fn watch_keys(tx: Sender<Event<KeyEvent>>, kill_keys_rx: Receiver<bool>) -> JoinHandle<()> {
     let tick_rate = Duration::from_millis(200);
-    thread::spawn(move || {
+    let thread = thread::spawn(move || {
         let mut last_tick = Instant::now();
         loop {
+            match kill_keys_rx.try_recv() {
+                Ok(_) => {
+                    break;
+                }
+                _ => {}
+            }
+
             let timeout = tick_rate
                 .checked_sub(last_tick.elapsed())
                 .unwrap_or_else(|| Duration::from_secs(0));
@@ -40,4 +47,6 @@ pub fn watch_keys(tx: Sender<Event<KeyEvent>>) {
             }
         }
     });
+
+    return thread;
 }

@@ -6,7 +6,10 @@ use app::App;
 use events::{watch_keys, Event};
 use ui::draw_ui;
 
-use std::{io, sync::mpsc};
+use std::{
+    io,
+    sync::mpsc::{self, Receiver, Sender},
+};
 
 use anyhow::{Context, Result};
 use crossterm::{
@@ -20,7 +23,8 @@ fn main() -> Result<()> {
     enable_raw_mode()?;
 
     let (tx, rx) = mpsc::channel();
-    watch_keys(tx);
+    let (kill_keys_tx, kill_keys_rx): (Sender<bool>, Receiver<bool>) = mpsc::channel();
+    let key_thread = watch_keys(tx, kill_keys_rx);
 
     let mut stdout = io::stdout();
     execute!(stdout, EnterAlternateScreen, EnableMouseCapture)
@@ -51,6 +55,9 @@ fn main() -> Result<()> {
             Event::Tick => {}
         };
     }
+
+    kill_keys_tx.send(true)?;
+    key_thread.join().unwrap_or(());
 
     disable_raw_mode()?;
     execute!(
