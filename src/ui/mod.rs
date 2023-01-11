@@ -1,4 +1,7 @@
+use std::sync::Arc;
+
 use rspotify::model::CurrentlyPlayingContext;
+use tokio::sync::Mutex;
 use tui::{
     backend::Backend,
     layout::Margin,
@@ -8,8 +11,8 @@ use tui::{
 
 use crate::app::App;
 
-pub fn draw_ui<B: Backend>(
-    f: &mut Frame<B>,
+pub fn draw_ui<'a, B: Backend>(
+    f: &mut Frame<'a, B>,
     app: &App,
     currently_playing: &Option<CurrentlyPlayingContext>,
 ) {

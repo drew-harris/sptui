@@ -1,11 +1,14 @@
 mod app;
 mod config;
 mod events;
+mod network;
 mod ui;
 
 use app::App;
 use config::Config;
 use events::{watch_keys, Event};
+use network::Network;
+use tokio::sync::Mutex;
 use ui::draw_ui;
 
 use rspotify::Config as RConfig;
@@ -15,6 +18,7 @@ use rspotify::{
     scopes, AuthCodeSpotify, Credentials, OAuth,
 };
 
+use std::sync::Arc;
 use std::{io, sync::mpsc};
 
 use anyhow::{Context, Result};
@@ -76,11 +80,17 @@ async fn main() -> Result<()> {
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend).context("Failed to create terminal")?;
 
-    let mut app = App::new(config);
+    let app = Arc::new(Mutex::new(App::new()));
 
+    let app_clone = Arc::clone(&app);
+
+    let network = Network::new(spotify, &app_clone, config);
+
+    // Start network
     loop {
         // Draw the UI
-        terminal.draw(|f| draw_ui(f, &mut app, &currently_playing))?;
+        let mut app_ref = app.lock().await;
+        terminal.draw(|f| draw_ui(f, &mut app_ref, &currently_playing))?;
 
         // Check for keys and resizes
         match rx.recv()? {
@@ -91,7 +101,6 @@ async fn main() -> Result<()> {
                 event::KeyCode::Char('q') => {
                     break;
                 }
-                event::KeyCode::Char('j') => app.toggle(),
                 _ => {}
             },
             Event::Resize(x, y) => terminal.resize(Rect::new(0, 0, x, y))?,
