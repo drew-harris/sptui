@@ -6,14 +6,14 @@ mod ui;
 use app::App;
 use config::Config;
 use events::{watch_keys, Event};
+use ui::draw_ui;
+
+use rspotify::Config as RConfig;
 use rspotify::{
     model::{AdditionalType, Market},
     prelude::{BaseClient, OAuthClient},
     scopes, AuthCodeSpotify, Credentials, OAuth,
 };
-
-use rspotify::Config as RConfig;
-use ui::draw_ui;
 
 use std::{io, sync::mpsc};
 
@@ -53,8 +53,8 @@ async fn main() -> Result<()> {
         },
     );
 
-    let url = spotify.get_authorize_url(false).unwrap();
-    spotify.prompt_for_token(&url).await.unwrap();
+    let url = spotify.get_authorize_url(false)?;
+    spotify.prompt_for_token(&url).await?;
     spotify.write_token_cache().await?;
 
     let additional_type = [AdditionalType::Track];
