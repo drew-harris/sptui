@@ -1,1 +1,5 @@
 /target
+token
+config.yaml
+.spotify_token_cache.json
+.env
