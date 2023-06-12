@@ -42,24 +42,25 @@ impl<'a> Network<'a> {
 
     pub async fn set_currently_playing(&self) {
         let playing = self.get_currently_playing().await;
+        let mut app = self.app.lock().await;
 
         match playing {
             Some(playing) => match playing.item {
                 Some(item) => match item.to_owned() {
                     rspotify::model::PlayableItem::Track(track) => {
-                        let mut app = self.app.lock().await;
-                        println!("Playing track: {}", track.name);
-                        app.set_currently_playing(track.name);
+                        app.currently_playing = Some(track);
                     }
-
-                    _ => {}
+                    rspotify::model::PlayableItem::Episode(_) => app.currently_playing = None,
                 },
 
-                None => {}
+                None => {
+                    app.currently_playing = None;
+                }
             },
             None => {
-                let mut app = self.app.lock().await;
-                app.set_currently_playing("".to_string());
+                {
+                    app.currently_playing = None;
+                };
             }
         }
     }

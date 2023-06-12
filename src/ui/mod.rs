@@ -11,7 +11,7 @@ pub fn draw_ui<B: Backend>(f: &mut Frame<'_, B>, app: &App) {
     let size = f.size();
 
     let title = match &app.currently_playing {
-        Some(track_name) => format!("Now Playing: {}", track_name),
+        Some(track) => format!("Now Playing: {}", track.name),
         None => "Nothing Playing".to_string(),
     };
 
@@ -21,8 +21,8 @@ pub fn draw_ui<B: Backend>(f: &mut Frame<'_, B>, app: &App) {
         .border_type(BorderType::Rounded);
 
     match &app.currently_playing {
-        Some(title) => {
-            let name = Paragraph::new(title.to_owned());
+        Some(track) => {
+            let name = Paragraph::new(track.name.to_owned());
             f.render_widget(
                 name,
                 size.inner(&Margin {
