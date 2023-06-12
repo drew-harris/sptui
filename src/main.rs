@@ -13,7 +13,6 @@ use ui::draw_ui;
 
 use rspotify::Config as RConfig;
 use rspotify::{
-    model::{AdditionalType, Market},
     prelude::{BaseClient, OAuthClient},
     scopes, AuthCodeSpotify, Credentials, OAuth,
 };
@@ -61,16 +60,16 @@ async fn main() -> Result<()> {
     spotify.prompt_for_token(&url).await?;
     spotify.write_token_cache().await?;
 
-    let additional_type = [AdditionalType::Track];
-    let currently_playing = spotify
-        .current_playing(Some(Market::FromToken), Some(&additional_type))
-        .await?;
+    let app = Arc::new(Mutex::new(App::new()));
+    let app_clone = Arc::clone(&app);
+    let network = Network::new(spotify, &app_clone, config);
+
+    network.set_currently_playing().await;
 
     // Start watching keys
     let (tx, rx) = mpsc::channel();
     watch_keys(tx);
 
-    // Start the terminal stuff
     enable_raw_mode()?;
 
     let mut stdout = io::stdout();
@@ -80,17 +79,11 @@ async fn main() -> Result<()> {
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend).context("Failed to create terminal")?;
 
-    let app = Arc::new(Mutex::new(App::new()));
-
-    let app_clone = Arc::clone(&app);
-
-    let network = Network::new(spotify, &app_clone, config);
-
     // Start network
     loop {
         // Draw the UI
         let mut app_ref = app.lock().await;
-        terminal.draw(|f| draw_ui(f, &mut app_ref, &currently_playing))?;
+        terminal.draw(|f| draw_ui(f, &mut app_ref))?;
 
         // Check for keys and resizes
         match rx.recv()? {

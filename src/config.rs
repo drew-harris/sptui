@@ -30,7 +30,7 @@ impl Config {
         self.client_id = config_yml.client_id;
         self.client_secret = config_yml.client_secret;
 
-        return Ok(());
+        Ok(())
     }
 
     pub fn save_config(&self) -> Result<()> {
@@ -53,6 +53,6 @@ impl Config {
         self.client_secret = client_secret;
         self.client_id = client_id;
 
-        return Ok(());
+        Ok(())
     }
 }

@@ -1,7 +1,3 @@
-use std::sync::Arc;
-
-use rspotify::model::CurrentlyPlayingContext;
-use tokio::sync::Mutex;
 use tui::{
     backend::Backend,
     layout::Margin,
@@ -11,16 +7,12 @@ use tui::{
 
 use crate::app::App;
 
-pub fn draw_ui<'a, B: Backend>(
-    f: &mut Frame<'a, B>,
-    app: &App,
-    currently_playing: &Option<CurrentlyPlayingContext>,
-) {
+pub fn draw_ui<B: Backend>(f: &mut Frame<'_, B>, app: &App) {
     let size = f.size();
 
-    let title = match app.is_clicked {
-        true => "Clicked".to_string(),
-        false => "Not Clicked".to_string(),
+    let title = match &app.currently_playing {
+        Some(track_name) => format!("Now Playing: {}", track_name),
+        None => "Nothing Playing".to_string(),
     };
 
     let block = Block::default()
@@ -28,27 +20,18 @@ pub fn draw_ui<'a, B: Backend>(
         .borders(Borders::ALL)
         .border_type(BorderType::Rounded);
 
-    match *&currently_playing {
-        Some(playing) => match &playing.item {
-            Some(item) => match item.to_owned() {
-                rspotify::model::PlayableItem::Track(track) => {
-                    let name = Paragraph::new(track.name);
-                    f.render_widget(
-                        name,
-                        size.inner(&Margin {
-                            vertical: 2,
-                            horizontal: 4,
-                        }),
-                    );
-                }
-
-                _ => {}
-            },
-
-            None => {}
-        },
-
-        _ => {}
+    match &app.currently_playing {
+        Some(title) => {
+            let name = Paragraph::new(title.to_owned());
+            f.render_widget(
+                name,
+                size.inner(&Margin {
+                    vertical: 2,
+                    horizontal: 4,
+                }),
+            );
+        }
+        None => (),
     }
 
     f.render_widget(block, size);
