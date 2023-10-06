@@ -32,10 +32,10 @@ impl<'a> Network<'a> {
             .await;
 
         match currently_playing {
-            Ok(opt) => opt,
+            Ok(opt) => return opt,
             Err(err) => {
                 println!("Error getting currently playing: {:?}", err);
-                None
+                return None;
             }
         }
     }
